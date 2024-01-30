@@ -253,7 +253,7 @@ def non_max_suppression(
             x = torch.cat((box[i], x[i, 4 + j, None], j[:, None].float(), mask[i]), 1)
         else:  # best class only
             conf, j = cls.max(1, keepdim=True)
-            x = torch.cat((box, conf, j.float(), mask), 1)[conf.view(-1) > conf_thres]
+            x = torch.cat((box, conf, j.float(), mask), 1)[conf.reshape(-1) > conf_thres]
 
         # Filter by class
         if classes is not None:
@@ -656,7 +656,7 @@ def process_mask_upsample(protos, masks_in, bboxes, shape):
         (torch.Tensor): The upsampled masks.
     """
     c, mh, mw = protos.shape  # CHW
-    masks = (masks_in @ protos.float().view(c, -1)).sigmoid().view(-1, mh, mw)
+    masks = (masks_in @ protos.float().reshape(c, -1)).sigmoid().reshape(-1, mh, mw)
     masks = F.interpolate(masks[None], shape, mode="bilinear", align_corners=False)[0]  # CHW
     masks = crop_mask(masks, bboxes)  # CHW
     return masks.gt_(0.5)
@@ -680,7 +680,7 @@ def process_mask(protos, masks_in, bboxes, shape, upsample=False):
 
     c, mh, mw = protos.shape  # CHW
     ih, iw = shape
-    masks = (masks_in @ protos.float().view(c, -1)).sigmoid().view(-1, mh, mw)  # CHW
+    masks = (masks_in @ protos.float().reshape(c, -1)).sigmoid().reshape(-1, mh, mw)  # CHW
 
     downsampled_bboxes = bboxes.clone()
     downsampled_bboxes[:, 0] *= mw / iw
@@ -708,7 +708,7 @@ def process_mask_native(protos, masks_in, bboxes, shape):
         masks (torch.Tensor): The returned masks with dimensions [h, w, n]
     """
     c, mh, mw = protos.shape  # CHW
-    masks = (masks_in @ protos.float().view(c, -1)).sigmoid().view(-1, mh, mw)
+    masks = (masks_in @ protos.float().reshape(c, -1)).sigmoid().reshape(-1, mh, mw)
     masks = scale_masks(masks[None], shape)[0]  # CHW
     masks = crop_mask(masks, bboxes)  # CHW
     return masks.gt_(0.5)

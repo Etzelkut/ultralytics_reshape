@@ -185,9 +185,9 @@ def fuse_conv_and_bn(conv, bn):
     )
 
     # Prepare filters
-    w_conv = conv.weight.clone().view(conv.out_channels, -1)
+    w_conv = conv.weight.clone().reshape(conv.out_channels, -1)
     w_bn = torch.diag(bn.weight.div(torch.sqrt(bn.eps + bn.running_var)))
-    fusedconv.weight.copy_(torch.mm(w_bn, w_conv).view(fusedconv.weight.shape))
+    fusedconv.weight.copy_(torch.mm(w_bn, w_conv).reshape(fusedconv.weight.shape))
 
     # Prepare spatial bias
     b_conv = torch.zeros(conv.weight.size(0), device=conv.weight.device) if conv.bias is None else conv.bias
@@ -216,9 +216,9 @@ def fuse_deconv_and_bn(deconv, bn):
     )
 
     # Prepare filters
-    w_deconv = deconv.weight.clone().view(deconv.out_channels, -1)
+    w_deconv = deconv.weight.clone().reshape(deconv.out_channels, -1)
     w_bn = torch.diag(bn.weight.div(torch.sqrt(bn.eps + bn.running_var)))
-    fuseddconv.weight.copy_(torch.mm(w_bn, w_deconv).view(fuseddconv.weight.shape))
+    fuseddconv.weight.copy_(torch.mm(w_bn, w_deconv).reshape(fuseddconv.weight.shape))
 
     # Prepare spatial bias
     b_conv = torch.zeros(deconv.weight.size(1), device=deconv.weight.device) if deconv.bias is None else deconv.bias
